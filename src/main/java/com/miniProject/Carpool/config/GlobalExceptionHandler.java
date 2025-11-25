@@ -1,48 +1,65 @@
 package com.miniProject.Carpool.config;
 
 import com.miniProject.Carpool.dto.ApiResponse;
+import com.miniProject.Carpool.util.ApiError;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.util.HashMap;
 import java.util.Map;
 
-@RestControllerAdvice //ดัก Error ทั้งแอป"
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiResponse<Object>> handleRuntimeException(RuntimeException e) {
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        if (e.getMessage() != null && e.getMessage().toLowerCase().contains("not found")) {
-            status = HttpStatus.NOT_FOUND;
-        }
-        return ResponseEntity.status(status).body(ApiResponse.error(e.getMessage(), status));
-    }
-
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiResponse<Object>> handleAuthenticationException(AuthenticationException e) {
-        HttpStatus status = HttpStatus.UNAUTHORIZED;
+    // ดักจับ ApiError
+    @ExceptionHandler(ApiError.class)
+    public ResponseEntity<ApiResponse<Object>> handleApiError(ApiError ex) {
         return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Invalid email or password",status));
+                .status(ex.getStatusCode())
+                .body(ApiResponse.error(ex.getStatusCode(), ex.getMessage()));
     }
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(AccessDeniedException e) {
-        HttpStatus status = HttpStatus.FORBIDDEN;
+    // ดักจับ Error จากการ Validation (@Valid, @NotNull, @Email)Status 400
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        ApiResponse<Map<String, String>> response = ApiResponse.<Map<String, String>>builder()
+                .success(false)
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .message("Validation Failed")
+                .data(errors) // ส่งรายละเอียด field ที่ผิดกลับไป
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    // ดักจับ Error 404
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleResourceNotFound(NoResourceFoundException ex) {
         return ResponseEntity
-                .status(HttpStatus.FORBIDDEN) // คืนค่า 403
-                .body(ApiResponse.error("Access Denied: You do not have permission to access this resource", status));
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(HttpStatus.NOT_FOUND.value(), "Endpoint not found: " + ex.getResourcePath()));
     }
 
+    // ดักจับ Internal Server Error 500
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Object>> handleGeneralException(Exception e) {
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+    public ResponseEntity<ApiResponse<Object>> handleGlobalException(Exception ex) {
+        // Log error ลง console เพื่อ debug
+        ex.printStackTrace();
+
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Internal Server Error: " + e.getMessage(), status));
+                .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error: " + ex.getMessage()));
     }
 }

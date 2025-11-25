@@ -9,54 +9,37 @@ import org.springframework.http.HttpStatus;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class ApiResponse<T> {
 
-    private Boolean success;
+    private boolean success;
+    private int statusCode;
     private String message;
     private T data;
-    private LocalDateTime timestamp;
-    private Integer statusCode;
 
-    //"สำเร็จ" (Success)
-    public static <T> ApiResponse<T> success(T data) {
+    @Builder.Default
+    private LocalDateTime timestamp = LocalDateTime.now();
+
+    // Helper method สำหรับสร้าง Response แบบ Success ง่ายๆ
+    public static <T> ApiResponse<T> success(int statusCode, String message, T data) {
         return ApiResponse.<T>builder()
                 .success(true)
-                .message("Operation successful")
-                .data(data)
-                .statusCode(HttpStatus.OK.value())
-                .timestamp(LocalDateTime.now())
-                .build();
-    }
-
-    //"สำเร็จ" แบบกำหนดข้อความได้
-    public static <T> ApiResponse<T> success(String message, T data) {
-        return ApiResponse.<T>builder()
-                .success(true)
+                .statusCode(statusCode)
                 .message(message)
                 .data(data)
-                .statusCode(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
                 .build();
     }
 
-    //(Error)
-    public static <T> ApiResponse<T> error(String message) {
+    // Helper method สำหรับสร้าง Response แบบ Error ง่ายๆ
+    public static <T> ApiResponse<T> error(int statusCode, String message) {
         return ApiResponse.<T>builder()
                 .success(false)
+                .statusCode(statusCode)
                 .message(message)
-                .statusCode(HttpStatus.BAD_REQUEST.value())
-                .timestamp(LocalDateTime.now())
-                .build();
-    }
-
-    public static <T> ApiResponse<T> error(String message, HttpStatus status) {
-        return ApiResponse.<T>builder()
-                .success(false)
-                .message(message)
-                .statusCode(status.value())
+                .data(null)
                 .timestamp(LocalDateTime.now())
                 .build();
     }

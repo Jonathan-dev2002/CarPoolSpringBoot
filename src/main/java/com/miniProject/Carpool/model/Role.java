@@ -1,6 +1,7 @@
 package com.miniProject.Carpool.model;
 
 public enum Role {
-    USER,
+    PASSENGER,
+    DRIVER,
     ADMIN
 }

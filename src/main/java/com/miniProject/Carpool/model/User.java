@@ -1,42 +1,70 @@
 package com.miniProject.Carpool.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
-@Table(name = "app_user") // 'user' มักเป็น Keyword ต้องเปลี่ยนชื่อ
+@Table(name = "users")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
+
+    @Column(unique = true, nullable = false)
+    private String username;
 
     @Column(unique = true, nullable = false)
     private String email;
 
-    private String firstName;
-    private String lastName;
+    @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private Boolean isActive = true;
+    private String firstName;
+    private String lastName;
+    private String gender;
+    private String phoneNumber;
+    private String profilePicture;
+
+    @Column(unique = true)
+    private String nationalIdNumber;
+
+    @Column(unique = true)
+    private String nationalIdPhotoUrl;
+
+    private LocalDateTime nationalIdExpiryDate;
+    private String selfiePhotoUrl;
 
     @Enumerated(EnumType.STRING)
-    private Role role = Role.USER;
+    @Builder.Default //ล็อกค่าเริ่มต้น
+    private Role role = Role.PASSENGER;
 
-    @Column(updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    @Builder.Default
+    private Boolean isVerified = false;
 
-    @PreUpdate
-    public void onUpdate() { updatedAt = LocalDateTime.now(); }
+    @Builder.Default
+    private Boolean isActive = true;
 
+    private String otpCode;
+    private LocalDateTime lastLogin;
 
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    // Relations (Comment ไว้ก่อนรอทำ Entity อื่นๆ)
+    // @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    // private DriverVerification driverVerification;
 }
