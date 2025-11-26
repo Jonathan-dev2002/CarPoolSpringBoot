@@ -20,32 +20,32 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final UserMapper userMapper; // ✅ Inject Mapper
+    private final UserMapper userMapper;
 
     public LoginResponse login(LoginRequest request) {
         User user = null;
 
-        // 1. หา User
+        // หา User
         if (request.getEmail() != null && !request.getEmail().isEmpty()) {
             user = userRepository.findByEmail(request.getEmail()).orElse(null);
         } else if (request.getUsername() != null && !request.getUsername().isEmpty()) {
             user = userRepository.findByUsername(request.getUsername()).orElse(null);
         }
 
-        // 2. ถ้าไม่เจอ หรือ Password ผิด
+        //  ถ้าไม่เจอ หรือ Password ผิด
         if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new ApiError(401, "Invalid credentials");
         }
 
-        // 3. เช็ค isActive
+        // เช็ค isActive
         if (!user.getIsActive()) {
             throw new ApiError(401, "Your account has been deactivated.");
         }
 
-        // 4. สร้าง Token
+        //  สร้าง Token
         String token = jwtUtil.generateToken(user.getId(), user.getRole().name());
 
-        // 5. แปลง User เป็น Response
+        // แปลง User เป็น Response
         UserResponse userResponse = userMapper.toResponse(user); // ✅ ใช้ Mapper
 
         return LoginResponse.builder()
