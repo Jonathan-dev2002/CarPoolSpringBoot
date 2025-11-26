@@ -5,7 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import lombok.Value;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -20,10 +20,10 @@ public class JwtUtil {
 
     // ควรเก็บใน application.properties: jwt.secret=...
     // อันนี้ใส่ค่า default ยาวๆ ไว้ก่อนเพื่อทดสอบ (ต้องยาว 256 bit ขึ้นไปสำหรับ HS256)
-    @Value("${jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
+    @Value("${jwt.secret}")
     private String secretKey;
 
-    @Value("${jwt.expiration:3600000}") // 1 hour
+    @Value("${jwt.expiration}") // 1 hour
     private long jwtExpiration;
 
     public String extractUsername(String token) {
