@@ -7,10 +7,9 @@ import com.miniProject.Carpool.dto.DriverVerificationStatusUpdateRequest;
 import com.miniProject.Carpool.dto.search.DriverVerificationSearchRequest;
 import com.miniProject.Carpool.dto.search.UserSearchRequest;
 import com.miniProject.Carpool.mapper.DriverVerificationMapper;
-import com.miniProject.Carpool.model.DriverVerification;
-import com.miniProject.Carpool.model.User;
-import com.miniProject.Carpool.model.VerificationStatus;
+import com.miniProject.Carpool.model.*;
 import com.miniProject.Carpool.repository.DriverVerificationRepository;
+import com.miniProject.Carpool.repository.RouteRepository;
 import com.miniProject.Carpool.repository.UserRepository;
 import com.miniProject.Carpool.spec.DriverVerificationSpecification;
 import com.miniProject.Carpool.util.ApiError;
@@ -24,12 +23,15 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class DriverVerificationService {
     private final DriverVerificationRepository driverVerificationRepository;
     private final UserRepository userRepository;
     private final DriverVerificationMapper driverVerificationMapper;
+    private final RouteRepository routeRepository;
 
     @Transactional
     public DriverVerificationResponse createDriverVerification(
@@ -110,16 +112,38 @@ public class DriverVerificationService {
         return driverVerificationsPage.map(driverVerificationMapper::toResponse);
     }
 
+    @Transactional
     public DriverVerificationResponse updateDriverVerificationStatus(String id, DriverVerificationStatusUpdateRequest request) {
         DriverVerification dv = driverVerificationRepository.findById(id)
                 .orElseThrow(() -> new ApiError(404, "not found"));
 
         if (request.getVerificationStatus() != null) {
-            dv.setVerificationStatus(request.getVerificationStatus());
-        };
+            VerificationStatus newStatus = request.getVerificationStatus();
+            dv.setVerificationStatus(newStatus);
+
+            User user = dv.getUser();
+
+            if (newStatus == VerificationStatus.APPROVED) {
+                user.setRole(Role.DRIVER);
+                user.setIsVerified(true);
+            } else if (newStatus == VerificationStatus.REJECTED) {
+                user.setRole(Role.PASSENGER);
+                user.setIsVerified(false);
+                List<Route> availableRoutes = routeRepository.findByDriverIdAndStatus(user.getId(), RouteStatus.AVAILABLE);
+
+                if (!availableRoutes.isEmpty()) {
+                    for (Route route : availableRoutes) {
+                        route.setStatus(RouteStatus.CANCELLED);
+                        // route.setCancelledBy("ADMIN");
+                        // route.setCancelledAt(LocalDateTime.now());
+                    }
+                    routeRepository.saveAll(availableRoutes);
+                }
+            }
+            userRepository.save(user);
+        }
         return driverVerificationMapper.toResponse(driverVerificationRepository.save(dv));
     }
-
 }
 
 
