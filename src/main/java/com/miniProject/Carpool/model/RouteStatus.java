@@ -1,4 +1,9 @@
 package com.miniProject.Carpool.model;
 
-public class RouteStatus {
+public enum RouteStatus {
+    AVAILABLE,
+    FULL,
+    COMPLETED,
+    CANCELLED,
+    IN_TRANSIT
 }
