@@ -38,7 +38,6 @@ public class UserService {
             throw new ApiError(409, "This username is already taken.");
         }
 
-        // Mock upload logic
         String nationalIdUrl = "mock_url_national_id";
         String selfieUrl = "mock_url_selfie";
 

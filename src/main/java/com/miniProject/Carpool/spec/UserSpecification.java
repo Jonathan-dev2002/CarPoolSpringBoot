@@ -3,10 +3,14 @@ package com.miniProject.Carpool.spec;
 
 import com.miniProject.Carpool.model.Role;
 import com.miniProject.Carpool.model.User;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserSpecification {
 
@@ -57,15 +61,46 @@ public class UserSpecification {
     }
 
     // กรอง Date Range (Created At) - แถมให้เผื่อใช้ครับ
+//    public static Specification<User> createdBetween(String fromDateStr, String toDateStr) {
+//        return (root, query, criteriaBuilder) -> {
+//            if (!StringUtils.hasText(fromDateStr) && !StringUtils.hasText(toDateStr)) {
+//                return null;
+//            }
+//
+//            // Logic คร่าวๆ: แปลง String เป็น LocalDateTime แล้วใช้ criteriaBuilder.between หรือ greaterThan/lessThan
+//            // (ละไว้ก่อนเพื่อความกระชับ ถ้าจะใช้บอกได้ครับ)
+//            return null;
+//        };
+//    }
     public static Specification<User> createdBetween(String fromDateStr, String toDateStr) {
         return (root, query, criteriaBuilder) -> {
+            // ถ้าไม่มีค่าส่งมาเลยทั้งคู่ ให้ return null (ไม่กรอง)
             if (!StringUtils.hasText(fromDateStr) && !StringUtils.hasText(toDateStr)) {
                 return null;
             }
 
-            // Logic คร่าวๆ: แปลง String เป็น LocalDateTime แล้วใช้ criteriaBuilder.between หรือ greaterThan/lessThan
-            // (ละไว้ก่อนเพื่อความกระชับ ถ้าจะใช้บอกได้ครับ)
-            return null;
+            List<Predicate> predicates = new ArrayList<>();
+
+            try {
+                // 1. กรณีมี "ตั้งแต่วันที่" (From)
+                if (StringUtils.hasText(fromDateStr)) {
+                    // ใช้ DateTimeFormatter.ISO_DATE_TIME รับค่ารูปแบบ '2023-10-25T10:30:00.000Z'
+                    LocalDateTime fromDate = LocalDateTime.parse(fromDateStr, DateTimeFormatter.ISO_DATE_TIME);
+                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), fromDate));
+                }
+
+                // 2. กรณีมี "ถึงวันที่" (To)
+                if (StringUtils.hasText(toDateStr)) {
+                    LocalDateTime toDate = LocalDateTime.parse(toDateStr, DateTimeFormatter.ISO_DATE_TIME);
+                    predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), toDate));
+                }
+            } catch (Exception e) {
+                // ถ้า Format วันที่ผิด ให้ข้ามการกรองไป หรือจะ Log error ก็ได้
+                return null;
+            }
+
+            // รวมเงื่อนไขทั้งหมดด้วย AND
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
 }
