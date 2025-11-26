@@ -1,12 +1,18 @@
 package com.miniProject.Carpool.repository;
 
 import com.miniProject.Carpool.model.DriverVerification;
+import com.miniProject.Carpool.model.User;
+import com.miniProject.Carpool.model.VerificationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.config.JpaRepositoryNameSpaceHandler;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface DvRepository extends JpaRepository<DriverVerification , String> , JpaSpecificationExecutor<DriverVerification> {
+import java.sql.Driver;
+import java.util.Optional;
 
+@Repository
+public interface DriverVerificationRepository extends JpaRepository<DriverVerification , String> , JpaSpecificationExecutor<DriverVerification> {
+    Optional<DriverVerification> findByUser(User user);
+    Optional<DriverVerification> findByUserId(User userId);
+    boolean existsLicenseNumber(String licenseNumber);
 }
