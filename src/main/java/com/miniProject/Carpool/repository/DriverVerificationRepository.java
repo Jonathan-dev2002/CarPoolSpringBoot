@@ -13,6 +13,6 @@ import java.util.Optional;
 @Repository
 public interface DriverVerificationRepository extends JpaRepository<DriverVerification , String> , JpaSpecificationExecutor<DriverVerification> {
     Optional<DriverVerification> findByUser(User user);
-    Optional<DriverVerification> findByUserId(User userId);
+    Optional<DriverVerification> findByUserId(String userId);
     boolean existsLicenseNumber(String licenseNumber);
 }
