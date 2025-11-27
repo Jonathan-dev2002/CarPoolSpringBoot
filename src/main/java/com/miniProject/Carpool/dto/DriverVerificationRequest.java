@@ -2,6 +2,7 @@ package com.miniProject.Carpool.dto;
 
 import com.miniProject.Carpool.model.LicenseType;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Data
 public class DriverVerificationRequest {
     @NotNull(message = "License number is required")
+    @Size(min = 8, max = 8, message = "License number must be 8 digits")
     private String licenseNumber;
 
     @NotNull(message = "First name of license is required")
