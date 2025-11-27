@@ -92,11 +92,13 @@ public class DriverVerificationService {
     }
 
     public void deleteDriverVerificationById(String id) {
-        if (!driverVerificationRepository.existsById(id)) {
-            throw new ApiError(404, "not found");
-        }
+//        if (!driverVerificationRepository.existsById(id)) {
+//            throw new ApiError(404, "not found");
+//        }
+        DriverVerification dv = driverVerificationRepository.findById(id)
+                .orElseThrow(() -> new ApiError(404, "not found"));
 //        if(driverVerificationRepository.findById(id).isPresent()) {})
-        driverVerificationRepository.deleteById(id);
+        driverVerificationRepository.delete(dv);
     }
 
     public Page<DriverVerificationResponse> searchDriverVerifications(DriverVerificationSearchRequest request) {
