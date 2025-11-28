@@ -106,10 +106,12 @@ public class NotificationService {
     }
 
     public void deleteNotificationByAdmin(String id) {
-        if (!notificationRepository.existsById(id)) {
-            throw new ApiError(404, "Notification not found");
-        }
-        notificationRepository.deleteById(id);
+//        if (!notificationRepository.existsById(id)) {
+//            throw new ApiError(404, "Notification not found");
+//        }
+        Notification n = notificationRepository.findById(id)
+                .orElseThrow(() -> new ApiError(404, "Notification not found"));
+        notificationRepository.delete(n);
     }
 
     private Notification findAndCheckOwner(String id, String userId) {
