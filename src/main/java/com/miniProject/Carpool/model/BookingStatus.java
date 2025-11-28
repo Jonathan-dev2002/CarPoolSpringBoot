@@ -1,4 +1,8 @@
 package com.miniProject.Carpool.model;
 
-public class BookingStatus {
+public enum BookingStatus {
+    PENDING,
+    CONFIRMED,
+    REJECTED,
+    CANCELLED
 }
