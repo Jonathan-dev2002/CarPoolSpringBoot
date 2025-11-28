@@ -1,4 +1,9 @@
 package com.miniProject.Carpool.model;
 
-public class NotificationType {
+public enum NotificationType {
+    SYSTEM,
+    BOOKING,
+    PAYMENT,
+    PROMOTION,
+    ALERT
 }
